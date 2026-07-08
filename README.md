@@ -33,7 +33,7 @@ Siga os passos abaixo para rodar o projeto localmente em sua máquina.
 Clone este repositório e crie um ambiente virtual:
 
 ```bash
-git clone [https://github.com/fabionaves-max/rsccalc.git](https://github.com/fabionaves-max/rsccalc.git)
+git clone https://github.com/fabionaves-max/rsccalc.git
 cd rsccalc
 python -m venv venv
 
