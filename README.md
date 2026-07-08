@@ -43,6 +43,9 @@ venv\Scripts\activate
 # No Linux/Mac:
 source venv/bin/activate
 
+# Instale os requerimentos
+pip install -r requirements.txt
+
 #Criando o banco de dados
 python manage.py makemigrations
 python manage.py migrate
