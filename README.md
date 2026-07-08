@@ -1,4 +1,4 @@
-# Sistema RSC-TAE 🎓
+ Sistema RSC-TAE 🎓
 
 [cite_start]Plataforma institucional desenvolvida em **Django** para automatizar, gerenciar e auditar a concessão do Reconhecimento de Saberes e Competências aos servidores ocupantes dos cargos do Plano de Carreira dos Cargos Técnico-Administrativos em Educação (RSC-PCCTAE)[cite: 11, 15].
 
@@ -48,9 +48,20 @@ pip install -r requirements.txt
 
 #Criando o banco de dados
 python manage.py makemigrations
+python manage.py makemigrations main
 python manage.py migrate
 
 #Importando os critérios do decreto
 python manage.py loaddata criterios.json
+
+#Criar o super usuario
+python manage.py createsuperuser
+
+#Acesse o pagina de administração e adicione o servidor
+http://localhost:8000/admin/
+
+#Pronto o sistema estará pronto para ser utilizado em:
+http://localhost:8000/
+
 ```
 
