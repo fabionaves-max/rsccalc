@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { size: a4; margin: 2cm; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #333; }
+        h1 { font-size: 18px; text-align: center; color: #004085; border-bottom: 2px solid #004085; padding-bottom: 5px; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f4f4f4; font-weight: bold; width: 25%; }
+        .instrucoes { margin-top: 50px; padding: 20px; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: justify; }
+    </style>
+</head>
+<body>
+    <h1>Memorial Descritivo - RSC PCCTAE</h1>
+
+    <table>
+        <tr>
+            <th>Servidor(a):</th>
+            <td>{{ servidor.nome }}</td>
+        </tr>
+        <tr>
+            <th>SIAPE:</th>
+            <td>{{ servidor.matricula_siape }}</td>
+        </tr>
+        <tr>
+            <th>Cargo:</th>
+            <td>{{ servidor.cargo }}</td>
+        </tr>
+        <tr>
+            <th>Nº Protocolo:</th>
+            <td>#{{ requerimento.id }}</td>
+        </tr>
+        <tr>
+            <th>Data e Status:</th>
+            <td>
+                {{ requerimento.data_solicitacao|date:"d/m/Y" }} -
+                {% if requerimento.submetido %}
+                    Submetido à Comissão ({{ requerimento.data_submissao|date:"d/m/Y" }})
+                {% else %}
+                    Em preenchimento (Rascunho)
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Pontuação Final:</th>
+            <td><strong>{{ requerimento.pontuacao_total }} pontos</strong></td>
+        </tr>
+        <tr>
+            <th>Nível Atingido:</th>
+            <td><strong>{{ requerimento.nivel_alcancado|default:"Não atingiu o mínimo" }}</strong></td>
+        </tr>
+    </table>
+
+    <div class="instrucoes">
+        <p><strong>NOTA À COMISSÃO AVALIADORA:</strong></p>
+        <p>As páginas a seguir contêm a descrição das atividades realizadas pelo servidor, agrupadas de acordo com os requisitos e itens do Decreto. Os respectivos documentos comprobatórios (anexos) encontram-se imediatamente após a descrição de cada item.</p>
+    </div>
+</body>
+</html>

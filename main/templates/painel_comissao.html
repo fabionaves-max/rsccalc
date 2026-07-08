@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <h2>Painel da Comissão (CRSC-PCCTAE)</h2>
+    <p class="text-muted">Área restrita para análise e deliberação de requerimentos.</p>
+</div>
+
+<!-- Aba de Pendentes -->
+<div class="card shadow-sm mb-5 border-warning">
+    <div class="card-header bg-warning text-dark fw-bold">
+        ⏳ Aguardando Análise ({{ pendentes.count }})
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Protocolo</th>
+                    <th>Servidor(a)</th>
+                    <th>Data Submissão</th>
+                    <th>Pontos</th>
+                    <th>Nível Pleiteado</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in pendentes %}
+                <tr>
+                    <td>#{{ req.id }}</td>
+                    <td>{{ req.servidor.nome }}</td>
+                    <td>{{ req.data_submissao|date:"d/m/Y" }}</td>
+                    <td>{{ req.pontuacao_total }}</td>
+                    <td><span class="badge bg-info">{{ req.nivel_alcancado }}</span></td>
+                    <td>
+                        <a href="{% url 'avaliar_requerimento' req.id %}" class="btn btn-sm btn-primary">Analisar</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center py-3">Nenhum requerimento pendente.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Aba de Avaliados -->
+<div class="card shadow-sm border-success">
+    <div class="card-header bg-success text-white fw-bold">
+        ✅ Processos Avaliados ({{ avaliados.count }})
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Protocolo</th>
+                    <th>Servidor(a)</th>
+                    <th>Data Avaliação</th>
+                    <th>Avaliador</th>
+                    <th>Resultado</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in avaliados %}
+                <tr>
+                    <td>#{{ req.id }}</td>
+                    <td>{{ req.servidor.nome }}</td>
+                    <td>{{ req.data_avaliacao|date:"d/m/Y" }}</td>
+                    <td>{{ req.avaliador.nome }}</td>
+                    <td>
+                        {% if req.deferido %}
+                            <span class="badge bg-success">Deferido</span>
+                        {% else %}
+                            <span class="badge bg-danger">Indeferido</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'avaliar_requerimento' req.id %}" class="btn btn-sm btn-outline-secondary">Visualizar</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center py-3">Nenhum processo foi avaliado ainda.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

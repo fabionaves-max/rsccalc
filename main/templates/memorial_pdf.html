@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Memorial RSC</title>
+    <style>
+        @page {
+            size: a4;
+            margin: 2cm;
+            @frame footer {
+                -pdf-frame-content: footerContent;
+                bottom: 0cm;
+                margin-left: 0cm;
+                margin-right: 0cm;
+                height: 1cm;
+            }
+        }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #333; }
+        h1 { font-size: 18px; text-align: center; color: #004085; border-bottom: 2px solid #004085; padding-bottom: 5px; }
+        h2 { font-size: 14px; color: #004085; margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        th { background-color: #f4f4f4; font-weight: bold; }
+        .atividade-bloco { margin-bottom: 15px; page-break-inside: avoid; }
+        .atividade-titulo { font-weight: bold; background-color: #e9ecef; padding: 5px; border: 1px solid #ccc; }
+        .atividade-corpo { border: 1px solid #ccc; border-top: none; padding: 8px; }
+        .descricao { font-style: italic; color: #555; }
+    </style>
+</head>
+<body>
+
+    <!-- Rodapé numerado -->
+    <div id="footerContent" style="text-align: right; font-size: 10px; color: #777;">
+        Página <pdf:pagenumber> de <pdf:pagecount>
+    </div>
+
+    <h1>Memorial Descritivo - RSC PCCTAE</h1>
+
+    <table>
+        <tr>
+            <th>Servidor(a):</th>
+            <td>{{ servidor.nome }}</td>
+            <th>SIAPE:</th>
+            <td>{{ servidor.matricula_siape }}</td>
+        </tr>
+        <tr>
+            <th>Cargo:</th>
+            <td>{{ servidor.cargo }}</td>
+            <th>Protocolo:</th>
+            <td>#{{ requerimento.id }}</td>
+        </tr>
+        <tr>
+            <th>Data:</th>
+            <td>{{ requerimento.data_solicitacao|date:"d/m/Y" }}</td>
+            <th>Status:</th>
+            <td>
+                {% if requerimento.submetido %}
+                    Enviado ({{ requerimento.data_submissao|date:"d/m/Y" }})
+                {% else %}
+                    Rascunho
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Pontuação Atual:</th>
+            <td>{{ requerimento.pontuacao_total }} pontos</td>
+            <th>Nível Alcançado:</th>
+            <td>{{ requerimento.nivel_alcancado|default:"Não atingiu o mínimo" }}</td>
+        </tr>
+    </table>
+
+    <h2>Atividades e Comprovações Registradas</h2>
+
+    {% regroup atividades by criterio as atividades_agrupadas %}
+
+    {% for grupo in atividades_agrupadas %}
+        <div class="atividade-titulo">
+            {{ grupo.grouper.get_requisito_display }} - Item {{ grupo.grouper.item }}<br>
+            <span style="font-weight: normal; font-size: 11px; color: #555;">{{ grupo.grouper.descricao }}</span>
+        </div>
+
+        {% for atividade in grupo.list %}
+        <div class="atividade-corpo atividade-bloco">
+            <p><strong>Descrição informada:</strong></p>
+            <p class="descricao">"{{ atividade.descricao_atividade|default:"Sem descrição informada." }}"</p>
+            <p>
+                <strong>Qtd:</strong> {{ atividade.quantidade }} |
+                <strong>Pontos un.:</strong> {{ atividade.criterio.pontos }} |
+                <strong>Subtotal:</strong> {% widthratio atividade.quantidade 1 atividade.criterio.pontos %} pts
+            </p>
+        </div>
+        {% endfor %}
+        <br>
+    {% empty %}
+        <p>Nenhuma atividade cadastrada até o momento.</p>
+    {% endfor %}
+
+</body>
+</html>

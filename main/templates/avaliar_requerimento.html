@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'painel_comissao' %}" class="btn btn-outline-secondary btn-sm mb-3">&larr; Voltar ao Painel da Comissão</a>
+    <h2>Avaliação do Protocolo #{{ requerimento.id }}</h2>
+    <p class="text-muted">Servidor(a): {{ requerimento.servidor.nome }} | SIAPE: {{ requerimento.servidor.matricula_siape }}</p>
+</div>
+
+<div class="row">
+    <!-- Coluna de Informações do Requerimento -->
+    <div class="col-md-5 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Dados da Solicitação</h5>
+            </div>
+            <div class="card-body">
+                <h1 class="display-4 text-center text-primary">{{ requerimento.pontuacao_total }}</h1>
+                <p class="text-center text-muted mb-4">Pontos Calculados</p>
+
+                <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Nível Atingido:</span>
+                        <strong>{{ requerimento.nivel_alcancado }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Data da Submissão:</span>
+                        <strong>{{ requerimento.data_submissao|date:"d/m/Y H:i" }}</strong>
+                    </li>
+                </ul>
+
+                <div class="d-grid">
+                    <!-- Reaproveitamos a View do PDF que criamos antes! -->
+                    <a href="{% url 'baixar_pdf_memorial' requerimento.id %}" class="btn btn-danger btn-lg">
+                        📄 Baixar Memorial e Anexos (PDF)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna do Parecer da Comissão -->
+    <div class="col-md-7">
+
+        <!-- Listagem de Atividades para Avaliação Individual -->
+        <div class="col-12 mt-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Auditoria de Documentos e Comprovações</h5>
+                    <span class="badge bg-light text-dark">Recálculo Automático Ativado</span>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for atividade in atividades %}
+                        <li class="list-group-item py-4 {% if atividade.aceita_comissao == False %}bg-light border-danger border-start border-4{% elif atividade.aceita_comissao == True %}bg-light border-success border-start border-4{% endif %}">
+
+                            <div class="row align-items-start">
+                                <!-- Dados da Atividade -->
+                                <div class="col-md-7">
+                                    <h6 class="fw-bold text-primary">{{ atividade.criterio.get_requisito_display }} - Item {{ atividade.criterio.item }}</h6>
+                                    <p class="mb-2 text-muted small">{{ atividade.criterio.descricao }}</p>
+                                    <div class="mb-2">
+                                        <strong>Descrição do Servidor:</strong><br>
+                                        <em>"{{ atividade.descricao_atividade }}"</em>
+                                    </div>
+                                    <span class="badge bg-secondary">Qtd: {{ atividade.quantidade }}</span>
+                                    <span class="badge bg-secondary">Pontos: {{ atividade.criterio.pontos }}</span>
+
+                                    {% if atividade.arquivo_comprovante %}
+                                    <a href="{{ atividade.arquivo_comprovante.url }}" target="_blank" class="btn btn-sm btn-outline-danger ms-2">📄 Ver PDF</a>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Painel de Decisão da Comissão para este item -->
+                                <div class="col-md-5 border-start">
+                                    {% if requerimento.deferido is None %}
+                                        <form method="POST" action="{% url 'avaliar_atividade_individual' atividade.id %}">
+                                            {% csrf_token %}
+                                            <div class="mb-2">
+                                                <label class="form-label fw-bold small">Status deste Comprovante:</label>
+                                                <select name="decisao" class="form-select form-select-sm mb-2" required>
+                                                    <option value="">Pendente de Análise...</option>
+                                                    <option value="True" {% if atividade.aceita_comissao == True %}selected{% endif %}>✅ VÁLIDO - Aceitar pontuação</option>
+                                                    <option value="False" {% if atividade.aceita_comissao == False %}selected{% endif %}>❌ INVÁLIDO - Glosar pontos</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-2">
+                                                <textarea name="justificativa_comissao" class="form-control form-control-sm" rows="2" placeholder="Justificativa (Obrigatória se inválido)">{{ atividade.justificativa_comissao }}</textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-primary w-100">Salvar Decisão do Item</button>
+                                        </form>
+                                    {% else %}
+                                        <!-- Visualização pós-avaliação final -->
+                                        <h6 class="fw-bold">Status:</h6>
+                                        {% if atividade.aceita_comissao %}
+                                            <span class="badge bg-success mb-2">✅ Aceito</span>
+                                        {% else %}
+                                            <span class="badge bg-danger mb-2">❌ Recusado</span>
+                                            <p class="small text-danger border border-danger p-2 rounded bg-white"><strong>Motivo:</strong> {{ atividade.justificativa_comissao }}</p>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Emissão de Parecer (Art. 15)</h5>
+            </div>
+            <div class="card-body">
+                {% if requerimento.deferido is None %}
+                    <!-- Formulário de Avaliação -->
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Decisão da Comissão</label>
+                            <select name="decisao" class="form-select form-select-lg" required>
+                                <option value="">Selecione...</option>
+                                <option value="True">✅ DEFERIDO - Conceder o RSC</option>
+                                <option value="False">❌ INDEFERIDO - Negar o pedido</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Justificativa Fundamentada</label>
+                            <textarea name="parecer_comissao" class="form-control" rows="6" required placeholder="Ateste os saberes e competências ou justifique o indeferimento..."></textarea>
+                            <small class="text-muted">A justificativa ficará visível para o servidor em seu painel.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 btn-lg" onclick="return confirm('Confirmar o registro da avaliação? Esta ação não pode ser desfeita.')">
+                            Registrar Parecer
+                        </button>
+                    </form>
+                {% else %}
+                    <!-- Modo Leitura (Já avaliado) -->
+                    <div class="alert {% if requerimento.deferido %}alert-success{% else %}alert-danger{% endif %}">
+                        <h4 class="alert-heading">
+                            {% if requerimento.deferido %}✅ Deferido{% else %}❌ Indeferido{% endif %}
+                        </h4>
+                        <p class="mb-0">Avaliado por <strong>{{ requerimento.avaliador.nome }}</strong> em {{ requerimento.data_avaliacao|date:"d/m/Y H:i" }}</p>
+                    </div>
+
+                    <h6 class="fw-bold mt-4">Parecer da Comissão:</h6>
+                    <div class="p-3 bg-light border rounded text-justify">
+                        {{ requerimento.parecer_comissao|linebreaks }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

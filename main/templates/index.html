@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-5 mb-5 bg-white rounded-3 shadow-sm text-center border-bottom border-primary border-5">
+    <h1 class="display-5 fw-bold text-primary">Sistema RSC-PCCTAE</h1>
+    <p class="col-md-8 mx-auto fs-5 text-muted">
+        Plataforma unificada para solicitação, gestão e avaliação do Reconhecimento de Saberes e Competências dos servidores técnico-administrativos.
+    </p>
+</div>
+
+<div class="row g-4 justify-content-center">
+
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0 text-center p-3">
+            <div class="card-body">
+                <div class="display-4 mb-3">👤</div>
+                <h4 class="card-title fw-bold">Área do Servidor</h4>
+                <p class="card-text text-muted mb-4">
+                    Abra novos requerimentos, anexe suas comprovações e acompanhe o status das suas avaliações.
+                </p>
+                <a href="{% url 'painel_servidor' %}" class="btn btn-primary w-100 btn-lg">
+                    Acessar Meu Painel
+                </a>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-muted small">
+                Acesso via SIAPE
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0 text-center p-3">
+            <div class="card-body">
+                <div class="display-4 mb-3">⚖️</div>
+                <h4 class="card-title fw-bold">Comissão (CRSC)</h4>
+                <p class="card-text text-muted mb-4">
+                    Área restrita aos membros designados para auditar memoriais e emitir pareceres de deferimento.
+                </p>
+                <a href="{% url 'painel_comissao' %}" class="btn btn-warning w-100 btn-lg text-dark fw-bold">
+                    Painel de Avaliação
+                </a>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-muted small">
+                {% if user.is_authenticated and user.servidor.membro_comissao %}
+                    <span class="text-success">✅ Seu acesso está liberado</span>
+                {% else %}
+                    Apenas membros autorizados
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0 text-center p-3">
+            <div class="card-body">
+                <div class="display-4 mb-3">⚙️</div>
+                <h4 class="card-title fw-bold">Administração</h4>
+                <p class="card-text text-muted mb-4">
+                    Gestão cadastral de servidores, tabelas de pontuação do decreto e configurações de sistema.
+                </p>
+                <a href="/admin/" class="btn btn-dark w-100 btn-lg">
+                    Configurações
+                </a>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-muted small">
+                Requer perfil de Superusuário
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

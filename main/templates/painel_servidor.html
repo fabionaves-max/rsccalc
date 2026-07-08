@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Meus Requerimentos</h2>
+        <p class="text-muted">SIAPE: {{ servidor.matricula_siape }} | Cargo: {{ servidor.cargo }}</p>
+    </div>
+    <div class="col-auto">
+        <a href="{% url 'novo_requerimento' %}" class="btn btn-success">
+            + Novo Requerimento
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Protocolo</th>
+                    <th>Data da Solicitação</th>
+                    <th>Pontuação Atual</th>
+                    <th>Nível Alcançado</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requerimentos %}
+                <tr>
+                    <td>#{{ req.id }}</td>
+                    <td>{{ req.data_solicitacao|date:"d/m/Y" }}</td>
+                    <td>{{ req.pontuacao_total }}</td>
+                    <td>
+                        <span class="badge bg-info">{{ req.nivel_alcancado|default:"Em preenchimento" }}</span>
+                    </td>
+                    <td>
+                        {% if req.deferido is None %}
+                            <span class="badge bg-warning text-dark">Em Análise</span>
+                        {% elif req.deferido %}
+                            <span class="badge bg-success">Deferido</span>
+                        {% else %}
+                            <span class="badge bg-danger">Indeferido</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'detalhe_requerimento' req.id %}" class="btn btn-sm btn-primary">Acessar</a>
+                        <a href="{% url 'baixar_pdf_memorial' req.id %}" class="btn btn-outline-danger btn-sm">📄 Baixar PDF do Memorial</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">
+                        Nenhum requerimento encontrado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

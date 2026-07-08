@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <div class="mb-3 d-flex gap-2">
+            <a href="{% url 'painel_servidor' %}" class="btn btn-outline-secondary btn-sm">&larr; Voltar ao Painel</a>
+            <a href="{% url 'baixar_pdf_memorial' requerimento.id %}" class="btn btn-outline-danger btn-sm">📄 Baixar PDF do Memorial</a>
+        </div>
+
+        <h2>Requerimento #{{ requerimento.id }}</h2>
+        <p class="text-muted mb-0">
+            Data de Criação: {{ requerimento.data_solicitacao|date:"d/m/Y" }}
+            {% if requerimento.submetido %}
+                | <span class="badge bg-success">Enviado em {{ requerimento.data_submissao|date:"d/m/Y H:i" }}</span>
+            {% else %}
+                | <span class="badge bg-warning text-dark">Rascunho (Aberto para edição)</span>
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="text-end">
+        <h3 class="text-primary mb-1">{{ requerimento.pontuacao_total }} pontos</h3>
+        <span class="badge bg-info fs-6 mb-2">{{ requerimento.nivel_alcancado|default:"Não atingiu o mínimo" }}</span>
+
+        {% if not requerimento.submetido %}
+        <form method="post" action="{% url 'finalizar_requerimento' requerimento.id %}" class="mt-2">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success shadow-sm" onclick="return confirm('Tem certeza? Após o envio não será possível alterar documentos.')">
+                ✔ Enviar para Avaliação
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="accordion shadow-sm mb-5" id="accordionRequisitos">
+    {% for req in estrutura_requisitos %}
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %} bg-light fw-bold text-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}">
+                {{ req.display }}
+            </button>
+        </h2>
+
+        <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#accordionRequisitos">
+            <div class="accordion-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for item in req.itens %}
+                    <li class="list-group-item p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-bold mb-1">Item {{ item.criterio.item }}</h6>
+                                <p class="text-muted small mb-1">{{ item.criterio.descricao }}</p>
+                                <span class="badge bg-secondary">Pontos por unidade: {{ item.criterio.pontos }}</span>
+                                <span class="badge bg-light text-dark border">{{ item.criterio.unidade_medida }}</span>
+                            </div>
+
+                            {% if not requerimento.submetido %}
+                            <button type="button" class="btn btn-sm btn-outline-primary ms-3 text-nowrap btn-adicionar"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalAdicionar"
+                                    data-criterio-id="{{ item.criterio.id }}"
+                                    data-criterio-nome="Item {{ item.criterio.item }} - {{ req.display }}">
+                                ➕ Adicionar
+                            </button>
+                            {% endif %}
+                        </div>
+
+                        {% if item.atividades %}
+                            <div class="mt-3 ps-3 border-start border-3 border-success">
+                                <h6 class="text-success small fw-bold text-uppercase mb-2">Comprovações Anexadas:</h6>
+                                {% for atividade in item.atividades %}
+                                <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-2">
+                                    <div>
+                                        <em class="small text-dark">"{{ atividade.descricao_atividade|default:'Sem descrição' }}"</em><br>
+                                        <small class="text-muted">Qtd: {{ atividade.quantidade }} | Total: {% widthratio atividade.quantidade 1 item.criterio.pontos %} pts</small>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        {% if atividade.arquivo_comprovante %}
+                                            <a href="{{ atividade.arquivo_comprovante.url }}" target="_blank" class="btn btn-sm btn-outline-danger">Ver PDF</a>
+                                        {% endif %}
+
+                                        {% if not requerimento.submetido %}
+                                        <form method="POST" action="{% url 'excluir_atividade' atividade.id %}" class="m-0 p-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary" onclick="return confirm('Excluir este documento?');">🗑️</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="modal fade" id="modalAdicionar" tabindex="-1" aria-labelledby="modalAdicionarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalAdicionarLabel">Anexar Comprovação</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    {% csrf_token %}
+
+                    <div class="alert alert-info py-2 small fw-bold" id="modalCriterioNome">
+                        </div>
+
+                    <div class="d-none">
+                        {{ form.criterio }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descrição para o Memorial</label>
+                        {{ form.descricao_atividade }}
+                        <small class="form-text text-muted">{{ form.descricao_atividade.help_text }}</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Quantidade</label>
+                        {{ form.quantidade }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Arquivo PDF</label>
+                        {{ form.arquivo_comprovante }}
+                        <small class="form-text text-muted">{{ form.arquivo_comprovante.help_text }}</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Atividade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var modalAdicionar = document.getElementById('modalAdicionar');
+
+        modalAdicionar.addEventListener('show.bs.modal', function (event) {
+            // Botão que acionou o modal
+            var button = event.relatedTarget;
+
+            // Extrai as informações dos atributos data-*
+            var criterioId = button.getAttribute('data-criterio-id');
+            var criterioNome = button.getAttribute('data-criterio-nome');
+
+            // Atualiza o texto de ajuda no modal
+            modalAdicionar.querySelector('#modalCriterioNome').textContent = criterioNome;
+
+            // Define o valor do <select> invisível no formulário
+            var selectCriterio = modalAdicionar.querySelector('select[name="criterio"]');
+            if(selectCriterio) {
+                selectCriterio.value = criterioId;
+            }
+        });
+    });
+</script>
+{% endblock %}

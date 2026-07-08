@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { size: a4; margin: 2cm; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #333; }
+        .cabecalho-item { background-color: #004085; color: white; padding: 10px; font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        .descricao-lei { font-size: 11px; background-color: #e9ecef; padding: 8px; border: 1px solid #ccc; margin-bottom: 20px; }
+        .atividade-bloco { margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 15px; }
+        .descricao-servidor { font-style: italic; color: #444; font-size: 13px; margin-bottom: 5px; }
+        .dados-matematicos { font-size: 11px; color: #666; }
+        .alerta-anexos { margin-top: 40px; text-align: center; border: 2px dashed #004085; color: #004085; padding: 15px; font-weight: bold; font-size: 14px; background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+
+    <!-- Cabeçalho do Grupo -->
+    <div class="cabecalho-item">
+        {{ criterio.get_requisito_display }} - Item {{ criterio.item }}
+    </div>
+    <div class="descricao-lei">
+        {{ criterio.descricao }}
+    </div>
+
+    <!-- Lista de atividades que o servidor digitou para ESTE grupo -->
+    {% for atividade in atividades %}
+    <div class="atividade-bloco">
+        <div class="descricao-servidor">
+            "{{ atividade.descricao_atividade|default:'Sem descrição informada.' }}"
+        </div>
+        <div class="dados-matematicos">
+            Qtd: {{ atividade.quantidade }} ({{ atividade.criterio.unidade_medida }})  | Pontos: {{ criterio.pontos }} |
+            Subtotal: {% widthratio atividade.quantidade 1 criterio.pontos %} pts
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- O Alerta que o usuário solicitou para ficar claro -->
+    <div class="alerta-anexos">
+        📄 ANEXOS DO ITEM {{ criterio.item }} NAS PÁGINAS SEGUINTES 📄
+    </div>
+
+</body>
+</html>
