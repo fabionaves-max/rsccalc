@@ -57,6 +57,9 @@ python manage.py loaddata criterios.json
 #Criar o super usuario
 python manage.py createsuperuser
 
+#Executar o servidor
+python manage.py runserver
+
 #Acesse o pagina de administração e adicione o servidor
 http://localhost:8000/admin/
 
