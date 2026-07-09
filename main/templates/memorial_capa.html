@@ -4,58 +4,113 @@
     <meta charset="UTF-8">
     <style>
         @page { size: a4; margin: 2cm; }
-        body { font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #333; }
-        h1 { font-size: 18px; text-align: center; color: #004085; border-bottom: 2px solid #004085; padding-bottom: 5px; margin-bottom: 30px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #f4f4f4; font-weight: bold; width: 25%; }
-        .instrucoes { margin-top: 50px; padding: 20px; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: justify; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #000; line-height: 1.6; }
+        h1 { font-size: 14px; text-align: center; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        h2 { font-size: 12px; background-color: #f0f0f0; padding: 6px; border: 1px solid #000; margin-top: 20px; font-weight: bold; }
+        .row { width: 100%; margin-bottom: 8px; clear: both; }
+        .label { font-weight: bold; display: inline-block; }
+        .value { display: inline-block; border-bottom: 1px solid #000; padding-left: 5px; color: #333; }
+        .checkbox-group { margin-top: 2px; margin-bottom: 2px; }
+        .check-item { display: inline-block; margin-right: 12px; }
+        .assinatura-box { margin-top: 60px; text-align: center; }
     </style>
 </head>
 <body>
-    <h1>Memorial Descritivo - RSC PCCTAE</h1>
 
-    <table>
-        <tr>
-            <th>Servidor(a):</th>
-            <td>{{ servidor.nome }}</td>
-        </tr>
-        <tr>
-            <th>SIAPE:</th>
-            <td>{{ servidor.matricula_siape }}</td>
-        </tr>
-        <tr>
-            <th>Cargo:</th>
-            <td>{{ servidor.cargo }}</td>
-        </tr>
-        <tr>
-            <th>Nº Protocolo:</th>
-            <td>#{{ requerimento.id }}</td>
-        </tr>
-        <tr>
-            <th>Data e Status:</th>
-            <td>
-                {{ requerimento.data_solicitacao|date:"d/m/Y" }} -
-                {% if requerimento.submetido %}
-                    Submetido à Comissão ({{ requerimento.data_submissao|date:"d/m/Y" }})
-                {% else %}
-                    Em preenchimento (Rascunho)
-                {% endif %}
-            </td>
-        </tr>
-        <tr>
-            <th>Pontuação Final:</th>
-            <td><strong>{{ requerimento.pontuacao_total }} pontos</strong></td>
-        </tr>
-        <tr>
-            <th>Nível Atingido:</th>
-            <td><strong>{{ requerimento.nivel_alcancado|default:"Não atingiu o mínimo" }}</strong></td>
-        </tr>
-    </table>
+    <h1>ANEXO - PORTARIA MEC Nº 608, DE 7 DE JULHO DE 2026</h1>
+    <h1 style="font-size: 12px; margin-top: 0;">MODELO PARA INSTRUÇÃO DE PROCESSO DE RECONHECIMENTO DE SABERES E COMPETÊNCIAS (RSC-PCCTAE)</h1>
 
-    <div class="instrucoes">
-        <p><strong>NOTA À COMISSÃO AVALIADORA:</strong></p>
-        <p>As páginas a seguir contêm a descrição das atividades realizadas pelo servidor, agrupadas de acordo com os requisitos e itens do Decreto. Os respectivos documentos comprobatórios (anexos) encontram-se imediatamente após a descrição de cada item.</p>
+    <h2>1. Identificação do Servidor</h2>
+    
+    <div class="row">
+        <span class="label">Nome:</span> 
+        <span class="value" style="width: 80%;">{{ servidor.nome }}</span>
     </div>
+    
+    <div class="row">
+        <span class="label">Siape:</span> <span class="value" style="width: 25%;">{{ servidor.matricula_siape }}</span>
+        <span class="label" style="margin-left: 15px;">Cargo:</span> <span class="value" style="width: 45%;">{{ servidor.cargo }}</span>
+    </div>
+    
+    <div class="row">
+        <span class="label">Data de ingresso em Instituição Federal de Ensino:</span> 
+        <span class="value" style="width: 35%;">{{ servidor.data_ingresso|date:"d/m/Y"|default:"____/____/________" }}</span>
+    </div>
+    
+    <div class="row">
+        <span class="label">Nível de Classificação:</span> <span class="value" style="width: 35%;">{{ servidor.nivel_classificacao }}</span>
+    </div>
+    
+    <div class="row">
+        <span class="label">Lotação:</span> 
+        <span class="value" style="width: 80%;">{{ servidor.lotacao|default:"_________________________________________________" }}</span>
+    </div>
+    
+    <div class="row">
+        <span class="label">Função/Encargo (se houver):</span> 
+        <span class="value" style="width: 65%;">{{ servidor.funcao_encargo|default:"_________________________________________________" }}</span>
+    </div>
+    
+    <div class="row">
+        <span class="label">Telefone/E-mail:</span> 
+        <span class="value" style="width: 70%;">{{ servidor.telefone|default:"(____) _________________" }} / {{ servidor.usuario.email|default:"_________________" }}</span>
+    </div>
+
+    <h2>2. Informações do Requerimento</h2>
+    
+    <div class="row">
+        <span class="label">Nível de RSC pretendido:</span> <span class="value" style="width: 25%;">{{ requerimento.nivel_alcancado }}</span>
+    </div>
+    
+    <div class="row">
+        <span class="label">Pontuação mínima necessária:</span> 
+        <span class="value" style="width: 20%;">{{ pontuacao_minima|default:"0" }}</span>
+    </div>
+    
+    <div class="row">
+        <span class="label">Pontuação total apresentada:</span> 
+        <span class="value" style="width: 20%;">{{ requerimento.pontuacao_total }}</span>
+    </div>
+    
+    <div class="row">
+        <span class="label">Quantidade de critérios específicos utilizados:</span> 
+        <span class="value" style="width: 20%;">{{ qtd_criterios }}</span>
+    </div>
+    
+    <div class="row">
+        <span class="label">Pontuação total excedente (banco de pontos):</span> 
+        <span class="value" style="width: 20%;">{{ pontuacao_excedente }}</span>
+    </div>
+    
+    <div class="row">
+        <span class="label">Saldo de pontuação de concessão anterior:</span> 
+        <span class="value" style="width: 25%;">NÃO TEM</span>
+    </div>
+    
+    <div class="row">
+        <span class="label">Número do processo relativo à concessão anterior do RSC-PCCTAE (se houver):</span> 
+        <span class="value" style="width: 30%;">NÃO TEM</span>
+    </div>
+
+    <h2>3. Descrição das Atividades por Requisito Legal</h2>
+    <p style="text-align: justify; margin-top: 10px; font-style: italic;">
+        O detalhamento das comprovações organizadas por item, bem como seus respectivos documentos anexos (conforme art. 4º do Decreto nº 13.048/2026), encontram-se dispostos sequencialmente nas páginas seguintes deste memorial.
+    </p>
+
+    <div class="assinatura-box">
+        <P style="text-align: justify;">À vista das informações apresentadas, totalizo {{ requerimento.pontuacao_total }} pontos e atendo aos critérios legais e regulamentares para o
+            nível {{ requerimento.nivel_alcancado }}. Solicito a análise pela CRSC-PCCTAE.</P>
+        
+        <p style="text-align: justify;">Declaro, para os fins previstos no Decreto regulamentador do RSC-PCCTAE, que:
+        <br/>I - Todos os fatos apresentados ocorreram no exercício do cargo;
+        <br/>II - Nenhuma atividade aqui declarada foi utilizada em requerimentos anteriores;
+        <br/>III - Toda a documentação anexada é autêntica e comprova integralmente as atividades apresentadas; e
+        <br/>IV - Tenho ciência de que informações falsas implicam responsabilidade administrativa, civil e penal.</p>
+        
+        <p><strong>{{ servidor.nome }}</strong></p>
+        <p>Assinatura do(a) Servidor(a)</p>
+        <p style="margin-top: 20px;">Local e Data: ____________________________________, ______/______/________</p>
+    </div>
+
 </body>
 </html>

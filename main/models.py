@@ -12,7 +12,16 @@ class Servidor(models.Model):
     matricula_siape = models.CharField(max_length=15, unique=True)
     cargo = models.CharField(max_length=150)
 
+    data_ingresso = models.DateField(null=True, blank=True)
+    nivel_classificacao = models.CharField(max_length=1,
+                                           choices=[('A', 'A'), ('B', 'B'), ('C', 'C'), ('D', 'D'), ('E', 'E')],
+                                           blank=True)
+    lotacao = models.CharField(max_length=200, blank=True)
+    funcao_encargo = models.CharField(max_length=150, blank=True)
+    telefone = models.CharField(max_length=20, blank=True)
+
     membro_comissao = models.BooleanField(default=False)
+
 
     def __str__(self):
         return self.nome

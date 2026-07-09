@@ -162,10 +162,35 @@ def baixar_pdf_memorial(request, requerimento_id):
     pdf_writer = PdfWriter()
 
     # 1. Gerar e adicionar a CAPA do Memorial
+
+    # --- NOVO BLOCO: Cálculos exigidos pela Portaria MEC 608/2026 ---
+
+    # Conta os critérios distintos utilizados
+    qtd_criterios = atividades_salvas.values_list('criterio', flat=True).distinct().count()
+
+    # Mapa de pontuação mínima exigida por nível
+    mapa_minimo = {
+        'RSC-PCCTAE I': 10,
+        'RSC-PCCTAE II': 15,
+        'RSC-PCCTAE III': 25,
+        'RSC-PCCTAE IV': 30,
+        'RSC-PCCTAE V': 52,
+        'RSC-PCCTAE VI': 75,
+    }
+    pontuacao_minima = mapa_minimo.get(requerimento.nivel_alcancado, 0)
+
+    # Calcula a pontuação excedente (banco de pontos)
+    pontuacao_excedente = float(requerimento.pontuacao_total) - pontuacao_minima if pontuacao_minima > 0 else 0
+
+    # 1. Gerar e adicionar a CAPA do Memorial (Agora passando os novos dados)
     capa_html = render_to_string('memorial_capa.html', {
         'requerimento': requerimento,
-        'servidor': servidor
+        'servidor': servidor,
+        'qtd_criterios': qtd_criterios,
+        'pontuacao_minima': pontuacao_minima,
+        'pontuacao_excedente': round(pontuacao_excedente, 1)  # Arredonda para 1 casa decimal
     })
+
     converter_html_para_pdf(capa_html, pdf_writer)
 
     # 2. Agrupar as atividades por critério e intercalar os PDFs
