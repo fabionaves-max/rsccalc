@@ -155,6 +155,11 @@ class AtividadeComprovada(models.Model):
     def __str__(self):
         return f"{self.criterio} ({self.quantidade}x)"
 
+    @property
+    def subtotal(self):
+        """ Calcula o subtotal desta atividade mantendo as casas decimais """
+        return self.quantidade * self.criterio.pontos
+
 
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver

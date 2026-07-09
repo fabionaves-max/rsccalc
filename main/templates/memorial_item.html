@@ -31,7 +31,7 @@
         </div>
         <div class="dados-matematicos">
             Qtd: {{ atividade.quantidade }} ({{ atividade.criterio.unidade_medida }})  | Pontos: {{ criterio.pontos }} |
-            Subtotal: {% widthratio atividade.quantidade 1 criterio.pontos %} pts
+            Subtotal: {{ atividade.subtotal }} pts
         </div>
     </div>
     {% endfor %}
