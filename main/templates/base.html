@@ -10,7 +10,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'painel_servidor' %}">Sistema RSC-TAE</a>
+            <a class="navbar-brand" href="{% url 'pagina_inicial' %}">Sistema RSC-TAE</a>
           <div class="d-flex text-white align-items-center">
                 {% if user.is_authenticated %}
                     <span class="me-3">Olá, {{ user.servidor.nome|default:user.username }}</span>

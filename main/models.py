@@ -106,14 +106,23 @@ class RequerimentoRSC(models.Model):
 
 def diretorio_comprovante_siape(instance, filename):
     """
-    Gera o caminho de upload dinâmico baseado no SIAPE do servidor.
-    Caminho final: comprovantes_rsc/<siape>/<nome_do_arquivo>
+    Gera o caminho de upload dinâmico baseado no SIAPE do servidor,
+    organizado por Requisito e Item do decreto.
+    Caminho final: comprovantes_rsc/<siape>/requisito_<requisito>/item_<item>/<nome_do_arquivo>
     """
-    # Navega pelas relações: AtividadeComprovada -> RequerimentoRSC -> Servidor
+    # 1. Busca o SIAPE navegando até o Servidor
     siape = instance.requerimento.servidor.matricula_siape
 
-    # Retorna o caminho formatado
-    return f'comprovantes_rsc/{siape}/{filename}'
+    # 2. Busca o Requisito (I, II, III...) e o Item (1, 2, 3...) navegando até o Critério
+    requisito = instance.criterio.requisito
+    item = instance.criterio.item
+
+    # 3. Limpa o nome do arquivo original (opcional, mas recomendado para evitar espaços e acentos)
+    # Aqui vamos usar o nome original, mas você pode usar o módulo 'uuid' se quiser nomes únicos
+    nome_arquivo = filename
+
+    # 4. Retorna o caminho formatado
+    return f'comprovantes_rsc/{siape}/requisito_{requisito}/item_{item}/{nome_arquivo}'
 
 
 class AtividadeComprovada(models.Model):

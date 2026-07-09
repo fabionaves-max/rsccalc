@@ -76,29 +76,38 @@
                             {% endif %}
                         </div>
 
-                        {% if item.atividades %}
+                       {% if item.atividades %}
                             <div class="mt-3 ps-3 border-start border-3 border-success">
                                 <h6 class="text-success small fw-bold text-uppercase mb-2">Comprovações Anexadas:</h6>
+                                
                                 {% for atividade in item.atividades %}
-                                <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-2">
+                                <div class="d-flex justify-content-between align-items-center bg-white p-3 rounded mb-2 border shadow-sm">
                                     <div>
-                                        <em class="small text-dark">"{{ atividade.descricao_atividade|default:'Sem descrição' }}"</em><br>
-                                        <small class="text-muted">Qtd: {{ atividade.quantidade }} | Total: {% widthratio atividade.quantidade 1 item.criterio.pontos %} pts</small>
+                                        <em class="text-dark">"{{ atividade.descricao_atividade|default:'Sem descrição informada' }}"</em><br>
+                                        <small class="text-muted fw-bold">
+                                            Qtd: {{ atividade.quantidade }} | Subtotal: {% widthratio atividade.quantidade 1 item.criterio.pontos %} pts
+                                        </small>
                                     </div>
-                                    <div class="d-flex gap-2">
+                                    
+                                    <div class="d-flex align-items-center gap-2 ms-3">
                                         {% if atividade.arquivo_comprovante %}
-                                            <a href="{{ atividade.arquivo_comprovante.url }}" target="_blank" class="btn btn-sm btn-outline-danger">Ver PDF</a>
+                                            <a href="{{ atividade.arquivo_comprovante.url }}" target="_blank" class="btn btn-sm btn-outline-danger text-nowrap">
+                                                📄 Ver PDF
+                                            </a>
                                         {% endif %}
-
+                                        
                                         {% if not requerimento.submetido %}
                                         <form method="POST" action="{% url 'excluir_atividade' atividade.id %}" class="m-0 p-0">
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-outline-secondary" onclick="return confirm('Excluir este documento?');">🗑️</button>
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap" onclick="return confirm('Tem certeza que deseja excluir este documento? A pontuação será recalculada automaticamente.');">
+                                                🗑️ Excluir
+                                            </button>
                                         </form>
                                         {% endif %}
                                     </div>
                                 </div>
                                 {% endfor %}
+                                
                             </div>
                         {% endif %}
                     </li>
