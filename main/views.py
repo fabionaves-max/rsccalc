@@ -33,13 +33,17 @@ def novo_requerimento(request):
 from django.utils import timezone
 from django.contrib import messages
 
+# 1. No topo do arquivo, adicione estas importações (se já não as tiver):
+from django.urls import reverse
+from django.http import HttpResponseRedirect
 
+
+# 2. Atualize a função detalhe_requerimento:
 @login_required
 def detalhe_requerimento(request, requerimento_id):
     servidor = request.user.servidor
     requerimento = get_object_or_404(RequerimentoRSC, id=requerimento_id, servidor=servidor)
 
-    # Processamento do formulário Modal
     if request.method == 'POST' and not requerimento.submetido:
         form = AtividadeComprovadaForm(request.POST, request.FILES)
         if form.is_valid():
@@ -47,25 +51,30 @@ def detalhe_requerimento(request, requerimento_id):
             nova_atividade.requerimento = requerimento
             nova_atividade.save()
             messages.success(request, 'Comprovante anexado com sucesso!')
-            return redirect('detalhe_requerimento', requerimento_id=requerimento.id)
+
+            # NOVO REDIRECIONAMENTO COM ÂNCORA E PARÂMETRO
+            url = reverse('detalhe_requerimento', args=[requerimento.id])
+            url += f"?req_aberto={nova_atividade.criterio.requisito}#item-{nova_atividade.criterio.id}"
+            return HttpResponseRedirect(url)
     else:
         form = AtividadeComprovadaForm()
 
-    # Buscamos todos os critérios ordenados pelo ID (garante a ordem exata da lei)
     todos_criterios = CriterioRequisito.objects.all().order_by('id')
     atividades_salvas = requerimento.atividades.all()
 
-    # Estruturamos os dados agrupando por Requisito (I, II, III...)
+    # Capturamos qual requisito deve ficar aberto (vindo da URL)
+    req_aberto = request.GET.get('req_aberto', '')
+
     estrutura = {}
     for crit in todos_criterios:
         req_key = crit.requisito
         if req_key not in estrutura:
             estrutura[req_key] = {
+                'key': req_key,  # Adicionado a chave original para comparação no HTML
                 'display': crit.get_requisito_display(),
                 'itens': []
             }
 
-        # Filtramos as atividades do servidor que pertencem a este critério específico
         acts = [a for a in atividades_salvas if a.criterio_id == crit.id]
 
         estrutura[req_key]['itens'].append({
@@ -76,9 +85,33 @@ def detalhe_requerimento(request, requerimento_id):
     contexto = {
         'requerimento': requerimento,
         'form': form,
-        'estrutura_requisitos': estrutura.values(),  # Mandamos a lista agrupada para o HTML
+        'estrutura_requisitos': estrutura.values(),
+        'req_aberto': req_aberto,  # Enviamos o status para o HTML
     }
     return render(request, 'detalhe_requerimento.html', contexto)
+
+
+# 3. Atualize a função de excluir para ter o mesmo comportamento:
+@login_required
+def excluir_atividade(request, atividade_id):
+    servidor = request.user.servidor
+    atividade = get_object_or_404(AtividadeComprovada, id=atividade_id, requerimento__servidor=servidor)
+    requerimento = atividade.requerimento
+
+    # Guardamos as referências do lugar onde o usuário estava antes de excluir a atividade
+    req_key = atividade.criterio.requisito
+    criterio_id = atividade.criterio.id
+
+    if not requerimento.submetido:
+        atividade.delete()
+        messages.success(request, 'Atividade removida com sucesso. A pontuação foi recalculada.')
+    else:
+        messages.error(request, 'Não é possível excluir atividades de um requerimento já enviado para a comissão.')
+
+    # Redireciona mantendo o scroll na mesma posição
+    url = reverse('detalhe_requerimento', args=[requerimento.id])
+    url += f"?req_aberto={req_key}#item-{criterio_id}"
+    return HttpResponseRedirect(url)
 
 # Nova view para o botão de Finalizar
 @login_required
@@ -97,25 +130,6 @@ def finalizar_requerimento(request, requerimento_id):
 
     return redirect('detalhe_requerimento', requerimento_id=requerimento.id)
 
-
-@login_required
-def excluir_atividade(request, atividade_id):
-    """ Exclui uma atividade anexada, desde que o requerimento não tenha sido enviado """
-    servidor = request.user.servidor
-
-    # Busca a atividade, garantindo que o requerimento atrelado a ela pertence a este servidor
-    atividade = get_object_or_404(AtividadeComprovada, id=atividade_id, requerimento__servidor=servidor)
-    requerimento = atividade.requerimento
-
-    # Trava de segurança: só exclui se não estiver submetido
-    if not requerimento.submetido:
-        # A exclusão vai acionar aquele Signal (post_delete) que criamos para recalcular os pontos
-        atividade.delete()
-        messages.success(request, 'Atividade removida com sucesso. A pontuação foi recalculada.')
-    else:
-        messages.error(request, 'Não é possível excluir atividades de um requerimento já enviado para a comissão.')
-
-    return redirect('detalhe_requerimento', requerimento_id=requerimento.id)
 
 
 from django.http import HttpResponse
@@ -214,6 +228,13 @@ def baixar_pdf_memorial(request, requerimento_id):
                         pdf_writer.add_page(page)
                 except Exception as e:
                     print(f"Erro ao mesclar anexo da atividade {atividade.id}: {e}")
+
+    # Gerar e adicionar a PÁGINA DE ENCERRAMENTO ---
+    encerramento_html = render_to_string('memorial_encerramento.html', {
+            'requerimento': requerimento,
+            'servidor': servidor
+        })
+    converter_html_para_pdf(encerramento_html, pdf_writer)
 
     # 3. Preparar o arquivo final para download
     response_buffer = io.BytesIO()
